@@ -174,5 +174,31 @@ describe "Set Command" do
       check_output_includes "autolist is on"
     end
   end
+  
+  describe "args" do
+    temporary_change_hash_value(Debugger::Command.settings, :argv, %w{foo bar})
+
+    it "when no args givenmust set args" do
+      Debugger.send(:remove_const, "RDEBUG_SCRIPT") if Debugger.const_defined?("RDEBUG_SCRIPT")
+      enter 'set'
+      debug_file 'set'
+      check_output_includes /\"set\" must be followed by the name of an set command/
+    end
+
+    it "must set args" do
+      Debugger.send(:remove_const, "RDEBUG_SCRIPT") if Debugger.const_defined?("RDEBUG_SCRIPT")
+      enter 'set args'
+      debug_file 'set'
+      check_output_includes "Argument list to give program being debugged when it is started is 'foo bar'"
+    end
+
+    it "must not set the first arg if RDEBUG_SCRIPT is defined" do
+      temporary_set_const(Debugger, "RDEBUG_SCRIPT", "bla") do
+        enter 'set args'
+        debug_file 'set'
+        check_output_includes "Argument list to give program being debugged when it is started is 'bar'"
+      end
+    end
+  end
 
 end
